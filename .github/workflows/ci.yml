@@ -21,12 +21,9 @@ jobs:
           sudo apt-get install -y libc++-18-dev
       - name: Setup CMake & ninja
         uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # v4.3.3
-      - name: Cache settings
-        uses: actions/cache@v5
-        with:
-          path: build/${{ matrix.presets }}/_deps
-          key: deps-${{ runner.os }}-${{ hashFiles('CMakeLists.txt') }}
-          restore-keys: deps-${{ runner.os }}-
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # 1.2.23
+        with: ${{ github.job }}
       - name: Config-Build-Test
         run: |
           threads=`nproc`
