@@ -1,4 +1,5 @@
 [![CI](https://github.com/VladKk/ipc-lib/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/VladKk/ipc-lib/actions/workflows/ci.yml)
+
 # IPC Lib
 
 ## Summary

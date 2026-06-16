@@ -1,4 +1,4 @@
-name: ubuntu
+name: CI
 
 on: [push, pull_request]
 
@@ -17,8 +17,8 @@ jobs:
       - uses: actions/checkout@v6
       - name: Setup compilers
         run: |
-          apt-get update
-          apt-get install -y g++14 clang-18 libc++-18-dev
+          sudo apt-get update
+          sudo apt-get install -y g++-14 clang-18 libc++-18-dev
       - name: Setup CMake & ninja
         uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # v4.3.3
       - name: Cache settings
