@@ -28,4 +28,3 @@ Here is the table of requirements for the project:
 |           CMake           |  3.28+  |
 |           Ninja           | 1.11.0+ |
 | clang-format + clang-tidy |   18+   |
-|          ccache           |  4.8+   |
