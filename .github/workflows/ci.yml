@@ -24,14 +24,13 @@ jobs:
       - name: Cache settings
         uses: actions/cache@v5
         with:
-          path: ${{ runner.workspace }}/build/${{ matrix.presets }}/_deps
+          path: build/${{ matrix.presets }}/_deps
           key: deps-${{ runner.os }}-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: deps-${{ runner.os }}-
       - name: Config-Build-Test
-        working-directory: ${{ runner.workspace }}/build/${{ matrix.presets }}
         run: |
           threads=`nproc`
-          cmake --preset ${{ matrix.presets }}
+          cmake -S . --preset ${{ matrix.presets }}
           cmake --build --preset ${{ matrix.presets }} --parallel $threads
           ctest --preset ${{ matrix.presets }} --output-on-failure
       - name: Upload failed tests
@@ -39,4 +38,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ctest-logs-${{ matrix.presets }}
-          path: build/Testing/**/*.log
+          path: build/${{ matrix.presets }}/Testing/**/*.log
