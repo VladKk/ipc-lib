@@ -1,0 +1,89 @@
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: Latest
+ColumnLimit: 100
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+AccessModifierOffset: -4
+NamespaceIndentation: None
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction:         true
+  AfterControlStatement: Never
+  AfterClass:            false
+  AfterStruct:           false
+  AfterUnion:            false
+  AfterEnum:             false
+  AfterNamespace:        false
+  AfterExternBlock:      false
+  AfterCaseLabel:        false
+  BeforeElse:            false
+  BeforeCatch:           false
+  BeforeWhile:           false
+  BeforeLambdaBody:      false
+  IndentBraces:          false
+  SplitEmptyFunction:    false
+  SplitEmptyRecord:      false
+  SplitEmptyNamespace:   false
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AlignAfterOpenBracket: true
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
+AlwaysBreakTemplateDeclarations: Yes
+SpaceAfterTemplateKeyword: true
+BreakBeforeConceptDeclarations: Always
+RequiresClausePosition: OwnLine
+IndentRequiresClause: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceAfterCStyleCast: false
+SpacesInParens: Never
+SpacesInSquareBrackets: false
+SpacesInAngles: Never
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: false
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: NextLine
+ConstructorInitializerIndentWidth: 4
+IndentCaseLabels: true
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+AlignEscapedNewlines: Left
+AlignOperands: Align
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
+EmptyLineBeforeAccessModifier: LogicalBlock
+EmptyLineAfterAccessModifier: Never
+FixNamespaceComments: true
+ReflowComments: Always
+SeparateDefinitionBlocks: Leave
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeIsMainRegex: '(_test)?$'
+IncludeCategories:
+  - Regex:    '^[<"]ipc/'
+    Priority: 1
+  - Regex:    '^<(gtest|gmock)/'
+    Priority: 5
+  - Regex:    '^<Qt'
+    Priority: 4
+  - Regex:    '^<.*\.h>$'
+    Priority: 2
+  - Regex:    '^<[[:alnum:]_]+>$'
+    Priority: 3
+  - Regex:    '.*'
+    Priority: 6
