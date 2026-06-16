@@ -24,7 +24,8 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "g++"
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_C_COMPILER": "gcc"
       }
     },
     {
@@ -36,12 +37,13 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER": "clang",
         "CMAKE_LINKER_TYPE": "LLD"
       }
     },
     {
       "name": "release",
-      "inherits": "default",
+      "inherits": "clang-debug",
       "displayName": "Release",
       "description": "Clean Release config",
       "binaryDir": "${sourceDir}/build/${presetName}",
@@ -51,7 +53,7 @@
     },
     {
       "name": "asan-ubsan",
-      "inherits": "default",
+      "inherits": "clang-debug",
       "displayName": "ASAN-UBSAN",
       "description": "ASAN-UBSAN config",
       "binaryDir": "${sourceDir}/build/${presetName}",
@@ -64,7 +66,7 @@
     },
     {
       "name": "tsan",
-      "inherits": "default",
+      "inherits": "clang-debug",
       "displayName": "TSAN",
       "description": "TSAN config",
       "binaryDir": "${sourceDir}/build/${presetName}",
