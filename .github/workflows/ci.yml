@@ -15,10 +15,10 @@ jobs:
         presets: ['gcc-debug', 'clang-debug', 'release', 'asan-ubsan', 'tsan']
     steps:
       - uses: actions/checkout@v6
-      - name: Setup compilers
+      - name: Setup compilers & linkers
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++-14 clang-18 libc++-18-dev
+          sudo apt-get install -y g++-14 clang-18 libc++-18-dev lld-18
       - name: Setup CMake & ninja
         uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # v4.3.3
       - name: Cache settings
