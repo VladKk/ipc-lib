@@ -14,18 +14,15 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(ipc STATIC
-    include/ipc/error.hpp
+add_library(ipc INTERFACE
+        include/ipc/error.hpp
+        include/ipc/transport.hpp
+        include/ipc/unix_socket.hpp
 )
 
-# TODO: remove me when cpp sources will be added
-set_target_properties(ipc PROPERTIES
-        LINKER_LANGUAGE CXX
-)
-
-target_include_directories(ipc PUBLIC include)
-target_compile_features(ipc PUBLIC cxx_std_23)
-target_compile_options(ipc PRIVATE
+target_include_directories(ipc INTERFACE include)
+target_compile_features(ipc INTERFACE cxx_std_23)
+target_compile_options(ipc INTERFACE
         -Wall
         -Wextra
         -Wpedantic
