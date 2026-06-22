@@ -1,69 +1,30 @@
-#ifndef UNIX_SOCKET_HPP
-#define UNIX_SOCKET_HPP
+#pragma once
 
 #include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
 
-#include <algorithm>
-#include <cstring>
-#include <string>
-#include <utility>
+#include <memory>
 
+#include "addr.hpp"
+#include "fd.hpp"
 #include "transport.hpp"
 
-struct FDHandler {
-    explicit FDHandler(const int fd = -1) noexcept : fd(fd) {}
-    ~FDHandler() noexcept { reset(); }
+namespace ipc {
 
-    // Disable copy
-    FDHandler(const FDHandler&) = delete;
-    FDHandler& operator=(const FDHandler&) = delete;
-
-    FDHandler(FDHandler&& other) noexcept : fd(other.release()) {}
-    FDHandler& operator=(FDHandler&& other) noexcept
-    {
-        if (this != &other) {
-            reset(other.release());
-        }
-
-        return *this;
-    }
-
-    [[nodiscard]] bool isValid() const noexcept { return fd >= 0; }
-
-    explicit operator int() const noexcept { return fd; }
-
-    int release() noexcept { return std::exchange(fd, -1); }
-    void reset(const int new_fd = -1) noexcept
-    {
-        if (fd >= 0) {
-            close(fd);
-        }
-        fd = new_fd;
-    }
-
-    int fd = -1;
-};
-
-class UnixSocketTransport {
+class Listener {
 public:
-    UnixSocketTransport() = default;
-
-    ~UnixSocketTransport()
+    Listener() = default;
+    ~Listener()
     {
         close();
     }
 
-    UnixSocketTransport(const UnixSocketTransport&) = delete;
-    UnixSocketTransport& operator=(const UnixSocketTransport&) = delete;
+    Listener(const Listener&) = delete;
+    Listener& operator=(const Listener&) = delete;
 
-    UnixSocketTransport(UnixSocketTransport&& other) noexcept
-        : fd_(std::move(other.fd_)),
-          path_(std::move(other.path_)),
-          is_server_(other.is_server_) {}
-
-    UnixSocketTransport& operator=(UnixSocketTransport&& other) noexcept
+    Listener(Listener&& other) noexcept
+        : fd_(std::move(other.fd_)), path_(std::move(other.path_)), is_server_(other.is_server_)
+    {}
+    Listener& operator=(Listener&& other) noexcept
     {
         if (this != &other) {
             close();
@@ -75,109 +36,75 @@ public:
         return *this;
     }
 
-    auto setupServer(const std::string_view path, const int backlog = 5) -> std::expected<void, IpcError>
+    std::expected<void, std::error_code> setupServer(const std::string_view path,
+                                                     const int backlog = 5)
     {
         path_ = path;
         is_server_ = true;
 
-        fd_.reset(socket(AF_UNIX, SOCK_STREAM, 0));
-        if (!fd_.isValid()) {
-            return std::unexpected(IpcError::connection_refused);
+        auto addr = createSocket(std::span<const std::byte, extra::max_path_len>(
+                                     std::as_bytes(std::span(path.data(), path.size()))))
+                        .transform([](const extra::unix_addr& a) { return a; })
+                        .transform_error([](const std::error_code e) { return e.message(); });
+        if (!addr) {
+            return std::unexpected(makeErrorCode(IPC_ERROR::SOCKET_ERROR));
         }
 
-        unlink(path_.c_str());
-
-        sockaddr_un addr{};
-        addr.sun_family = AF_UNIX;
-        std::strncpy(
-            std::span(addr.sun_path).data(), std::string(path).c_str(), sizeof(addr.sun_path) - 1);
-
-        if (const socklen_t len =
-                offsetof(sockaddr_un, sun_path) + std::strlen(std::span(addr.sun_path).data()) + 1;
-            bind(fd_.fd, reinterpret_cast<sockaddr*>(&addr), len) == -1) { // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-            return std::unexpected(IpcError::connection_refused);
+        if (bind(fd_.get(), reinterpret_cast<sockaddr*>(&addr->addr), addr->len) < 0) { // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+            return std::unexpected(std::error_code(errno, std::system_category()));
         }
 
-        if (listen(fd_.fd, backlog) == -1) {
-            return std::unexpected(IpcError::connection_refused);
+        if (listen(fd_.get(), backlog) < 0) {
+            return std::unexpected(std::error_code(errno, std::system_category()));
         }
 
         return {};
     }
 
-    auto setupClient(const std::string_view path) -> std::expected<void, IpcError>
+    std::expected<void, std::error_code> setupClient(const std::string_view path)
     {
-        fd_.reset(socket(AF_UNIX, SOCK_STREAM, 0));
-        if (!fd_.isValid()) {
-            return std::unexpected(IpcError::connection_refused);
+        auto addr = createSocket(std::span<const std::byte, extra::max_path_len>(
+                                     std::as_bytes(std::span(path.data(), path.size()))))
+                        .transform([](const extra::unix_addr& a) { return a; })
+                        .transform_error([](const std::error_code e) { return e.message(); });
+        if (!addr) {
+            return std::unexpected(makeErrorCode(IPC_ERROR::SOCKET_ERROR));
         }
 
-        sockaddr_un addr{};
-        addr.sun_family = AF_UNIX;
-        std::strncpy(
-            std::span(addr.sun_path).data(), std::string(path).c_str(), sizeof(addr.sun_path) - 1);
-
-        if (const socklen_t len =
-                offsetof(sockaddr_un, sun_path) + std::strlen(std::span(addr.sun_path).data()) + 1;
-            connect(fd_.fd, reinterpret_cast<sockaddr*>(&addr), len) == -1) { // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-                return std::unexpected(IpcError::connection_refused);
+        if (connect(fd_.get(), reinterpret_cast<sockaddr*>(&addr->addr), addr->len) < 0) { // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+            return std::unexpected(std::error_code(errno, std::system_category()));
         }
 
         return {};
     }
 
-    [[nodiscard]]
-    auto accept() const -> std::expected<UnixSocketTransport, IpcError>
+    [[nodiscard]] std::expected<Listener, std::error_code> accept() const
     {
         if (!fd_.isValid() || !is_server_) {
-            return std::unexpected(IpcError::system_error);
+            return std::unexpected(makeErrorCode(IPC_ERROR::ACCEPT_ERROR));
         }
 
-        FDHandler cfd;
-        cfd.reset(::accept(fd_.fd, nullptr, nullptr));
+        extra::FileDescriptor cfd;
+        cfd.reset(::accept(fd_.get(), nullptr, nullptr));
 
         if (!cfd.isValid()) {
-            return std::unexpected(IpcError::system_error);
+            return std::unexpected(std::error_code(errno, std::system_category()));
         }
 
-        return UnixSocketTransport(std::move(cfd));
+        return Listener(std::move(cfd));
     }
 
-    [[nodiscard]]
-    auto send(const std::span<const std::byte> msg) const -> std::expected<size_t, IpcError>
+    [[nodiscard]] const extra::FileDescriptor& getFd() const
     {
-        if (!fd_.isValid()) {
-            return std::unexpected(IpcError::system_error);
-        }
-
-        ::send(fd_.fd, msg.data(), msg.size(), MSG_NOSIGNAL);
-
-        return msg.size();
-    }
-
-    [[nodiscard]]
-    auto recv(const std::span<std::byte> msg) const -> std::expected<size_t, IpcError>
-    {
-        if (!fd_.isValid()) {
-            return std::unexpected(IpcError::system_error);
-        }
-
-        errno = 0;
-        if (ssize_t const bytes_read = ::recv(fd_.fd, msg.data(), msg.size(), AF_IRDA);
-            bytes_read <= 0) {
-            switch (errno) {
-                case ECONNREFUSED: return std::unexpected(IpcError::connection_refused);
-                case EPIPE: case ECONNRESET: return std::unexpected(IpcError::connection_closed);
-                case EAGAIN: return std::unexpected(IpcError::would_block);
-                default: return std::unexpected(IpcError::system_error);
-            }
-        }
-
-        return msg.size();
+        return fd_;
     }
 
     void close()
     {
+        if (fd_.isValid()) {
+            fd_.release();
+        }
+
         if (is_server_ && !path_.empty()) {
             unlink(path_.c_str());
             path_.clear();
@@ -185,13 +112,78 @@ public:
     }
 
 private:
-    explicit UnixSocketTransport(FDHandler fd) : fd_(std::move(fd)) {}
+    explicit Listener(extra::FileDescriptor fd) : fd_(std::move(fd)) {}
 
-    FDHandler fd_;
+    std::expected<extra::unix_addr, std::error_code>
+    createSocket(const std::span<const std::byte, extra::max_path_len> path)
+    {
+        fd_.reset(socket(AF_UNIX, SOCK_STREAM, 0));
+        if (!fd_.isValid()) {
+            return std::unexpected(std::error_code(errno, std::system_category()));
+        }
+
+
+        unlink(reinterpret_cast<const char*>(path.data())); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+
+        return extra::buildAddr(path);
+    }
+
+    extra::FileDescriptor fd_;
     std::string path_;
     bool is_server_{false};
 };
 
-static_assert(ByteTransport<UnixSocketTransport>);
+class Connection {
+public:
+    Connection() : listener_(std::make_unique<Listener>()) {}
 
-#endif // UNIX_SOCKET_HPP
+    [[nodiscard]] std::expected<size_t, std::error_code>
+    send(const std::span<const std::byte> msg) const
+    {
+        if (!listener_->getFd().isValid()) {
+            return std::unexpected(makeErrorCode(IPC_ERROR::SEND_ERROR));
+        }
+
+        ssize_t n{};
+        do { // NOLINT(cppcoreguidelines-avoid-do-while)
+            n = ::send(listener_->getFd().get(), msg.data(), msg.size(), MSG_NOSIGNAL);
+        } while (n < 0 && errno == EINTR);
+
+        if (n == 0) {
+            return std::unexpected(makeErrorCode(IPC_ERROR::CLOSED));
+        }
+        if (n < 0) {
+            return std::unexpected(std::error_code(errno, std::system_category()));
+        }
+
+        return msg.size();
+    }
+
+    [[nodiscard]] std::expected<size_t, std::error_code> recv(const std::span<std::byte> msg) const
+    {
+        if (!listener_->getFd().isValid()) {
+            return std::unexpected(makeErrorCode(IPC_ERROR::RECV_ERROR));
+        }
+
+        ssize_t n{};
+        do { // NOLINT(cppcoreguidelines-avoid-do-while)
+            n = ::recv(listener_->getFd().get(), msg.data(), msg.size(), 0);
+        } while (n < 0 && errno == EINTR);
+
+        if (n == 0) {
+            return std::unexpected(makeErrorCode(IPC_ERROR::CLOSED));
+        }
+        if (n < 0) {
+            return std::unexpected(std::error_code(errno, std::system_category()));
+        }
+
+        return msg.size();
+    }
+
+private:
+    std::unique_ptr<Listener> listener_;
+};
+
+static_assert(ByteTransport<Connection>);
+
+} // namespace ipc

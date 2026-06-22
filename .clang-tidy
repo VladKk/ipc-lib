@@ -10,6 +10,7 @@ Checks: >
   misc-*,
   clang-analyzer-*,
   -modernize-use-trailing-return-type,
+  -portability-avoid-pragma-once,
   -readability-identifier-length,
   -bugprone-easily-swappable-parameters,
   -misc-include-cleaner,
@@ -32,9 +33,9 @@ SystemHeaders: false
 CheckOptions:
   readability-identifier-naming.NamespaceCase: lower_case
   readability-identifier-naming.ClassCase: CamelCase
-  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.StructCase: lower_case
   readability-identifier-naming.UnionCase: CamelCase
-  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.EnumCase: UPPER_CASE
   readability-identifier-naming.TypedefCase: CamelCase
   readability-identifier-naming.TypeAliasCase: CamelCase
   readability-identifier-naming.TypeTemplateParameterCase: CamelCase
@@ -53,7 +54,7 @@ CheckOptions:
   readability-identifier-naming.PrivateMemberSuffix: '_'
   readability-identifier-naming.ProtectedMemberCase: lower_case
   readability-identifier-naming.ProtectedMemberSuffix: '_'
-  readability-identifier-naming.EnumConstantCase: lower_case
+  readability-identifier-naming.EnumConstantCase: UPPER_CASE
   readability-identifier-naming.ConstantCase: lower_case
   readability-identifier-naming.ConstexprVariableCase: lower_case
   readability-identifier-naming.GlobalConstantCase: lower_case
