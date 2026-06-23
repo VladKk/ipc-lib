@@ -8,10 +8,9 @@ namespace ipc {
 enum class IPC_ERROR : std::uint8_t {
     // 0 - success
     CLOSED = 1,
-    SOCKET_ERROR,
-    ACCEPT_ERROR,
-    SEND_ERROR,
-    RECV_ERROR,
+    PATH_TOO_LONG,
+    PATH_EMPTY,
+    INVALID_FD,
     SERIALIZATION_ERROR
 };
 
@@ -25,14 +24,12 @@ struct ipc_category : std::error_category {
         switch (static_cast<IPC_ERROR>(ev)) {
             case IPC_ERROR::CLOSED:
                 return "connection closed by peer";
-            case IPC_ERROR::SOCKET_ERROR:
-                return "could not create socket for listener";
-            case IPC_ERROR::ACCEPT_ERROR:
-                return "could not accept incoming connection";
-            case IPC_ERROR::SEND_ERROR:
-                return "could not send message";
-            case IPC_ERROR::RECV_ERROR:
-                return "could not receive message";
+            case IPC_ERROR::PATH_TOO_LONG:
+                return "socket path too long (> 108 char)";
+            case IPC_ERROR::PATH_EMPTY:
+                return "socket path should not be empty";
+            case IPC_ERROR::INVALID_FD:
+                return "invalid file descriptor";
             case IPC_ERROR::SERIALIZATION_ERROR:
                 return "serialization failed";
         }

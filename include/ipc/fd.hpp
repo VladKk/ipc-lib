@@ -1,14 +1,17 @@
 #pragma once
 
+#include <sys/socket.h>
 #include <unistd.h>
 
+#include <expected>
+#include <system_error>
 #include <utility>
 
 namespace ipc::extra {
 
 class FileDescriptor {
 public:
-    explicit FileDescriptor(const int fd = -1) noexcept : fd_(fd) {}
+    explicit FileDescriptor(int fd = -1) noexcept : fd_(fd) {}
     ~FileDescriptor() noexcept
     {
         reset();
@@ -51,5 +54,16 @@ public:
 private:
     int fd_ = -1;
 };
+
+inline std::expected<FileDescriptor, std::error_code> make_socket()
+{
+    FileDescriptor fd;
+    fd.reset(socket(AF_UNIX, SOCK_STREAM, 0));
+    if (!fd.isValid()) {
+        return std::unexpected(std::error_code(errno, std::system_category()));
+    }
+
+    return fd;
+}
 
 } // namespace ipc::extra
