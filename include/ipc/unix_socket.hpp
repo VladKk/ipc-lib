@@ -65,7 +65,9 @@ private:
 
 class UDSListener {
 public:
-    UDSListener(extra::FileDescriptor fd, std::string path) : path_(std::move(path)), fd_(std::move(fd)) {}
+    UDSListener(extra::FileDescriptor fd, std::string path)
+        : path_(std::move(path)), fd_(std::move(fd))
+    {}
     ~UDSListener()
     {
         close();
@@ -92,11 +94,16 @@ public:
             return std::unexpected(fd.error());
         }
 
-        unlink(reinterpret_cast<const char*>(path.data())); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        unlink(reinterpret_cast<const char*>( // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+            path.data()));
 
         auto [addr, len] = extra::buildAddr(std::as_bytes(std::span(path.data(), path.size())));
 
-        if (::bind(fd.value().get(), reinterpret_cast<sockaddr*>(&addr), len) < 0) { // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(
+                fd.value().get(),
+                reinterpret_cast<sockaddr*>( // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+                    &addr),
+                len) < 0) {
             return std::unexpected(std::error_code(errno, std::system_category()));
         }
 
@@ -157,7 +164,11 @@ inline std::expected<Connection, std::error_code> connect(std::string_view path)
 
     auto [addr, len] = extra::buildAddr(std::as_bytes(std::span(path.data(), path.size())));
 
-    if (::connect(fd.value().get(), reinterpret_cast<sockaddr*>(&addr), len) < 0) { // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    if (::connect(
+            fd.value().get(),
+            reinterpret_cast<sockaddr*>( // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+                &addr),
+            len) < 0) {
         return std::unexpected(std::error_code(errno, std::system_category()));
     }
 

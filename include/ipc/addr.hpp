@@ -19,7 +19,8 @@ inline unix_addr buildAddr(std::span<const std::byte> path)
     sockaddr_un addr{};
     addr.sun_family = AF_UNIX;
     const std::span span_path(addr.sun_path);
-    socklen_t len{offsetof(sockaddr_un, sun_path)}; // Specify immediately for unnamed addresses (socketpair)
+    socklen_t len{
+        offsetof(sockaddr_un, sun_path)}; // Specify immediately for unnamed addresses (socketpair)
 
     if (path.front() == std::byte{0}) { // ABSTRACT
         auto safe_view = path | std::views::take(std::min(path.size(), sizeof(addr.sun_path)));

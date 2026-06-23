@@ -1,8 +1,8 @@
 #pragma once
 
+#include <concepts>
 #include <expected>
 #include <span>
-#include <concepts>
 
 #include "error.hpp"
 
