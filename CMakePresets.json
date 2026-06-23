@@ -22,10 +22,6 @@
       "displayName": "GCC Debug",
       "description": "Clean GCC Debug config",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "environment": {
-        "CXXFLAGS": "-stdlib=libc++",
-        "LDFLAGS": "-stdlib=libc++"
-      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "g++",
@@ -38,6 +34,10 @@
       "displayName": "clang Debug",
       "description": "Clean clang Debug config",
       "binaryDir": "${sourceDir}/build/${presetName}",
+      "environment": {
+        "CXXFLAGS": "-stdlib=libc++",
+        "LDFLAGS": "-stdlib=libc++"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "clang++",

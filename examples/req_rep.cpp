@@ -4,6 +4,12 @@
 int main(int argc, char* argv[])
 {
     const auto args = std::span(argv, argc).subspan(1);
+
+    if (args.size() < 2) {
+        std::println("Pass argument to proceed (--server or --client)");
+        return EXIT_FAILURE;
+    }
+
     const std::string path = "/tmp/ipc_sock_demo.sock";
 
     if (std::string_view(args.back()) == "--server") {
