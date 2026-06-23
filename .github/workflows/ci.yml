@@ -18,7 +18,7 @@ jobs:
       - name: Setup apt packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y libc++-18-dev libc++-19-dev
+          sudo apt-get install -y libc++-18-dev
       - name: Setup CMake & ninja
         uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # v4.3.3
       - name: Cache googletest
