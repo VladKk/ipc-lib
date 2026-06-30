@@ -5,7 +5,7 @@ int main(int argc, char* argv[])
 {
     const auto args = std::span(argv, argc).subspan(1);
 
-    if (args.size() < 2) {
+    if (args.empty()) {
         std::println("Pass argument to proceed (--server or --client)");
         return EXIT_FAILURE;
     }
@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
             const std::error_code ec = listener.error();
             std::println(R"(Listener setup error: value={} category="{}" message="{}")",
                          ec.value(), ec.category().name(), ec.message());
+            return EXIT_FAILURE;
         }
 
         auto conn = listener->accept();
@@ -25,6 +26,7 @@ int main(int argc, char* argv[])
             const std::error_code ec = conn.error();
             std::println(R"(Connection setup error: value={} category="{}" message="{}")",
                          ec.value(), ec.category().name(), ec.message());
+            return EXIT_FAILURE;
         }
 
         conn->send(std::as_bytes(std::span("Hello world!")))
@@ -35,12 +37,13 @@ int main(int argc, char* argv[])
                     return std::unexpected(e);
                 });
     } else if (std::string_view(args.back()) == "--client") {
-        std::span<std::byte> msg;
+        const std::span<std::byte> msg;
         auto conn = ipc::connect(path);
         if (!conn) {
             const std::error_code ec = conn.error();
             std::println(R"(Connection setup error: value={} category="{}" message="{}")",
                          ec.value(), ec.category().name(), ec.message());
+            return EXIT_FAILURE;
         }
 
         conn->recv(msg)

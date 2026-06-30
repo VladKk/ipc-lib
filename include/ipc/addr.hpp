@@ -16,6 +16,10 @@ struct unix_addr {
 
 inline unix_addr buildAddr(std::span<const std::byte> path)
 {
+    if (path.empty()) {
+        return {};
+    }
+
     sockaddr_un addr{};
     addr.sun_family = AF_UNIX;
     const std::span span_path(addr.sun_path);

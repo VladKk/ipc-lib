@@ -2,8 +2,6 @@
 
 #include <sys/socket.h>
 
-#include <memory>
-#include <print>
 #include <utility>
 
 #include "addr.hpp"
@@ -11,6 +9,19 @@
 #include "transport.hpp"
 
 namespace ipc {
+
+constexpr int default_backlog = 5;
+
+inline std::expected<extra::FileDescriptor, std::error_code> makeSocket()
+{
+    extra::FileDescriptor fd;
+    fd.reset(socket(AF_UNIX, SOCK_STREAM, 0));
+    if (!fd.isValid()) {
+        return std::unexpected(std::error_code(errno, std::system_category()));
+    }
+
+    return fd;
+}
 
 class Connection {
 public:
@@ -79,23 +90,23 @@ public:
     UDSListener(UDSListener&& other) noexcept = default;
     UDSListener& operator=(UDSListener&& other) noexcept = default;
 
-    static std::expected<UDSListener, std::error_code> bind(std::string_view path, int backlog = 5)
+    static std::expected<UDSListener, std::error_code> bind(std::string_view path,
+                                                            int backlog = default_backlog)
     {
         if (path.empty()) {
             return std::unexpected(makeErrorCode(IPC_ERROR::PATH_EMPTY));
         }
 
-        if (path.size() > sizeof(sockaddr_un::sun_path)) {
-            std::println("socket path too long, will be truncated!");
+        if (path.size() >= sizeof(sockaddr_un::sun_path)) {
+            return std::unexpected(makeErrorCode(IPC_ERROR::PATH_TOO_LONG));
         }
 
-        auto fd = extra::make_socket();
+        auto fd = makeSocket();
         if (!fd) {
             return std::unexpected(fd.error());
         }
 
-        unlink(reinterpret_cast<const char*>( // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-            path.data()));
+        unlink(std::string(path).c_str());
 
         auto [addr, len] = extra::buildAddr(std::as_bytes(std::span(path.data(), path.size())));
 
@@ -121,7 +132,9 @@ public:
         }
 
         extra::FileDescriptor cfd;
-        cfd.reset(::accept(fd_.get(), nullptr, nullptr));
+        do { // NOLINT(cppcoreguidelines-avoid-do-while)
+            cfd.reset(::accept(fd_.get(), nullptr, nullptr));
+        } while (cfd.get() == -1 && errno == EINTR);
 
         if (!cfd.isValid()) {
             return std::unexpected(std::error_code(errno, std::system_category()));
@@ -134,11 +147,11 @@ public:
     {
         if (fd_.isValid()) {
             fd_.reset();
-        }
 
-        if (!path_.empty()) {
-            unlink(path_.c_str());
-            path_.clear();
+            if (!path_.empty()) {
+                unlink(path_.c_str());
+                path_.clear();
+            }
         }
     }
 
@@ -153,11 +166,11 @@ inline std::expected<Connection, std::error_code> connect(std::string_view path)
         return std::unexpected(makeErrorCode(IPC_ERROR::PATH_EMPTY));
     }
 
-    if (path.size() > sizeof(sockaddr_un::sun_path)) {
-        std::println("socket path too long, will be truncated!");
+    if (path.size() >= sizeof(sockaddr_un::sun_path)) {
+        return std::unexpected(makeErrorCode(IPC_ERROR::PATH_TOO_LONG));
     }
 
-    auto fd = extra::make_socket();
+    auto fd = makeSocket();
     if (!fd) {
         return std::unexpected(fd.error());
     }
