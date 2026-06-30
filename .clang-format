@@ -69,7 +69,7 @@ KeepEmptyLinesAtTheStartOfBlocks: false
 EmptyLineBeforeAccessModifier: LogicalBlock
 EmptyLineAfterAccessModifier: Never
 FixNamespaceComments: true
-ReflowComments: Always
+ReflowComments: true
 SeparateDefinitionBlocks: Leave
 SortIncludes: CaseSensitive
 IncludeBlocks: Regroup
