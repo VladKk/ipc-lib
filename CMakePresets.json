@@ -23,9 +23,7 @@
       "description": "Clean GCC Debug config",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_C_COMPILER": "gcc"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -40,8 +38,6 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_C_COMPILER": "clang",
         "CMAKE_LINKER_TYPE": "LLD"
       }
     },

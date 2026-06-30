@@ -33,7 +33,7 @@ jobs:
       - name: Setup apt packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-14 g++-14 clang-19 libc++-19-dev libc++abi-19-dev lld-19
+          sudo apt-get install -y clang-19 libc++-19-dev libc++abi-19-dev lld-19 clang-format-19
       - name: Setup CMake & ninja
         uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # v4.3.3
       - name: Cache googletest
@@ -57,3 +57,12 @@ jobs:
         with:
           name: ctest-logs-${{ matrix.preset }}
           path: build/${{ matrix.preset }}/Testing/**/*.log
+      - name: Run clang-format
+        run: |
+          find . -path "./build" -prune -o \( -name "*.cpp" -o -name "*.hpp" \) -print0 | xargs -0 -r clang-format-19 --dry-run -Werror > build/${{ matrix.preset }}/clang-format-report
+      - name: Upload failed clang-format
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: clang-format-report
+          path: build/${{ matrix.preset }}/clang-format-report
