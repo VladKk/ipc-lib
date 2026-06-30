@@ -33,7 +33,7 @@ jobs:
       - name: Setup apt packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-19 libc++-19-dev libc++abi-19-dev lld-19 clang-format-19
+          sudo apt-get install -y clang-19 libc++-19-dev libc++abi-19-dev lld-19 clang-format-19 clang-tools-19
       - name: Setup CMake & ninja
         uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # v4.3.3
       - name: Cache googletest

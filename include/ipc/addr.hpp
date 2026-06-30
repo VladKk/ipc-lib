@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <ranges>
 #include <span>
